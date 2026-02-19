@@ -14,15 +14,38 @@
 #define BACKLOG 65535
 #define MAX_EVENTS 1024
 #define BUFFER_SIZE 4096
-#define RESPONSE_SIZE 65536   // 64 KB
 #define ARTIFICIAL_DELAY_US 1000  // 1ms simulated work
+
+#define BODY_SIZE 65536
+
+static char *response;
+static size_t response_size;
+
+void build_response() {
+    const char *header_fmt =
+        "HTTP/1.1 200 OK\r\n"
+        "Content-Length: %d\r\n"
+        "Content-Type: text/plain\r\n"
+        "Connection: keep-alive\r\n"
+        "\r\n";
+
+    int header_len = snprintf(NULL, 0, header_fmt, BODY_SIZE);
+    char *header = malloc(header_len + 1);
+    sprintf(header, header_fmt, BODY_SIZE);
+
+    response_size = header_len + BODY_SIZE;
+    response = malloc(response_size);
+
+    memcpy(response, header, header_len);
+    memset(response + header_len, 'A', BODY_SIZE);
+
+    free(header);
+}
 
 typedef struct {
     int fd;
     size_t written;
 } client_t;
-
-static char response[RESPONSE_SIZE];
 
 static int set_nonblocking(int fd) {
     int flags = fcntl(fd, F_GETFL, 0);
@@ -30,8 +53,7 @@ static int set_nonblocking(int fd) {
 }
 
 int main() {
-    // Fill response buffer
-    memset(response, 'A', sizeof(response));
+    build_response();
 
     int server_fd = socket(AF_INET, SOCK_STREAM, 0);
     int opt = 1;
@@ -111,10 +133,10 @@ int main() {
                 }
 
                 if (events[i].events & EPOLLOUT) {
-                    while (client->written < RESPONSE_SIZE) {
+                    while (client->written < response_size) {
                         ssize_t w = write(fd,
                                           response + client->written,
-                                          RESPONSE_SIZE - client->written);
+                                          response_size - client->written);
 
                         if (w < 0) {
                             if (errno == EAGAIN) break;
@@ -126,7 +148,7 @@ int main() {
                         client->written += w;
                     }
 
-                    if (client->written >= RESPONSE_SIZE) {
+                    if (client->written >= response_size) {
                         client->written = 0;
 
                         struct epoll_event mod = {

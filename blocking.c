@@ -9,7 +9,6 @@
 #define PORT 8080
 #define BACKLOG 65535
 #define BUFFER_SIZE 4096
-//#define RESPONSE_SIZE 65536       // 64 KB
 #define ARTIFICIAL_DELAY_US 1000  // 1 ms
 
 #define BODY_SIZE 65536
@@ -39,7 +38,7 @@ void build_response() {
 }
 
 int main() {
-    //memset(response, 'A', sizeof(response));
+    build_response();
 
     int server_fd = socket(AF_INET, SOCK_STREAM, 0);
     if (server_fd < 0) {
