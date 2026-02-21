@@ -9,7 +9,11 @@
 
 int main(void) {
     int server_fd = socket(AF_INET, SOCK_STREAM, 0);
-    struct sockaddr_in addr = { .sin_family=AF_INET, .sin_addr.s_addr=htonl(INADDR_ANY), .sin_port=htons(8080) };
+    struct sockaddr_in addr = {
+        .sin_family = AF_INET,
+        .sin_addr.s_addr = htonl(INADDR_ANY),
+        .sin_port = htons(8080)
+    };
 
     if (bind(server_fd, (struct sockaddr *)&addr, sizeof(addr)) < 0) {
       perror("bind");
@@ -42,19 +46,19 @@ int main(void) {
 
         for (int i = 0; i < n; i++) {
             if (events[i].data.fd == server_fd) {
-                int c = accept(server_fd, NULL, NULL);
-                if (c >= 0) {
+                int client_fd = accept(server_fd, NULL, NULL);
+                if (client_fd >= 0) {
                   ev.events = EPOLLIN;
-                  ev.data.fd = c;
-                  epoll_ctl(epfd, EPOLL_CTL_ADD, c, &ev);
+                  ev.data.fd = client_fd;
+                  epoll_ctl(epfd, EPOLL_CTL_ADD, client_fd, &ev);
                 }
             } else {
-                int c = events[i].data.fd;
+                int client_fd = events[i].data.fd;
                 char buf[1024];
-                ssize_t r = recv(c, buf, sizeof(buf), 0);
-                if (r > 0) write(c, resp, sizeof(resp) - 1);
-                epoll_ctl(epfd, EPOLL_CTL_DEL, c, NULL);
-                close(c);
+                ssize_t r = recv(client_fd, buf, sizeof(buf), 0);
+                if (r > 0) write(client_fd, resp, sizeof(resp) - 1);
+                epoll_ctl(epfd, EPOLL_CTL_DEL, client_fd, NULL);
+                close(client_fd);
             }
         }
     }
