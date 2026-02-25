@@ -77,14 +77,12 @@ int main() {
     addr.sin_port = htons(PORT);
 
     if (bind(server_fd, (struct sockaddr *)&addr, sizeof(addr)) < 0) {
-      perror("bind");
-      exit(1);
+        perror("bind");
+        exit(1);
     }
 
     listen(server_fd, 128);
     listen(server_fd, BACKLOG);
-
-    printf("io_uring stress server running...\n");
 
     // Submit first accept
     struct io_uring_sqe *sqe = io_uring_get_sqe(&ring);

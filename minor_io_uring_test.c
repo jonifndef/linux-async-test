@@ -50,7 +50,8 @@ int main(void) {
         io_uring_prep_recv(sqe, c, buf, sizeof(buf), 0);
         io_uring_submit(&ring);
         io_uring_wait_cqe(&ring, &cqe);
-        ssize_t r = cqe->res; io_uring_cqe_seen(&ring, cqe);
+        ssize_t r = cqe->res;
+        io_uring_cqe_seen(&ring, cqe);
 
         if (r > 0) {
             sqe = io_uring_get_sqe(&ring);

@@ -16,8 +16,8 @@ int main(void) {
     };
 
     if (bind(server_fd, (struct sockaddr *)&addr, sizeof(addr)) < 0) {
-      perror("bind");
-      exit(1);
+        perror("bind");
+        exit(1);
     }
 
     listen(server_fd, 128);
@@ -48,15 +48,16 @@ int main(void) {
             if (events[i].data.fd == server_fd) {
                 int client_fd = accept(server_fd, NULL, NULL);
                 if (client_fd >= 0) {
-                  ev.events = EPOLLIN;
-                  ev.data.fd = client_fd;
-                  epoll_ctl(epfd, EPOLL_CTL_ADD, client_fd, &ev);
+                    ev.events = EPOLLIN;
+                    ev.data.fd = client_fd;
+                    epoll_ctl(epfd, EPOLL_CTL_ADD, client_fd, &ev);
                 }
             } else {
                 int client_fd = events[i].data.fd;
                 char buf[1024];
                 ssize_t r = recv(client_fd, buf, sizeof(buf), 0);
-                if (r > 0) write(client_fd, resp, sizeof(resp) - 1);
+                if (r > 0)
+                    write(client_fd, resp, sizeof(resp) - 1);
                 epoll_ctl(epfd, EPOLL_CTL_DEL, client_fd, NULL);
                 close(client_fd);
             }
